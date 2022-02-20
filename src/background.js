@@ -1,61 +1,22 @@
 const SETTINGS_INTERVAL_CHECK_DEFAULT = 1000;
 const SETTINGS_INTERVAL_UPLOAD_DEFAULT = 10000;
-let db = undefined;
-let statsSessions = [];
+let sessionsToUpload = [];
+let userSessions = [];
 
 chrome.action.setBadgeText({text: 'OFF'});
 chrome.action.setBadgeBackgroundColor({color: '#737373'});
 
 try {
-    self.importScripts('firebase/firebase-app.js', 'firebase/firebase-firestore.js', 'firebase/firebase-analytics.js', 'firebase/firebase-database.js', 'dayjs.min.js')
-
-    var firebaseConfig = {
-        apiKey: "AIzaSyBAxgpX5SWjN2EgQ4olSopATeYWgNg3EmY",
-        authDomain: "dwextension.firebaseapp.com",
-        projectId: "dwextension",
-        storageBucket: "dwextension.appspot.com",
-        messagingSenderId: "914088129559",
-        appId: "1:914088129559:web:628f714ce68e8baae31852",
-        databaseURL: "https://dwextension-default-rtdb.europe-west1.firebasedatabase.app/",
-        measurementId: "G-W073HWKQ28"
-      };
-    
-    firebase.initializeApp(firebaseConfig);
-    if(firebase.analytics.isSupported() === true)  {
-        firebase.analytics();
-    }
-
-    // Initialize Firebase
-    db = firebase.database();
-
     chrome.runtime.onMessage.addListener((msg, sender, resp) => {
         if(msg.command === "fetch") {
-            db.ref("users/" + msg.data.userId + "/sessions/").on('value', (snapshot) => {
-                const data = snapshot.val();
-                statsSessions = [];
-                if(snapshot.toJSON() != undefined) {
-                    statsSessions = json2array(snapshot.toJSON());
-                }
-                
-                resp({type: "result", status: "success", data: statsSessions, request: msg});
-                //Errors:
-                //resp({type: "result", status: "error", data: "No data found!", request: msg});
-            });
-            return true;
-        } else if(msg.command === "fetchAll") {
-            db.ref("users/").on('value', (snapshot) => {
-                const data = snapshot.val();
-                let mystatsSessions = [];
-                if(snapshot.toJSON() != undefined) {
-                    mystatsSessions = json2array(snapshot.toJSON());
-                }
-                
-                resp({type: "result", status: "success", data: mystatsSessions, request: msg});
-                //Errors:
-                //resp({type: "result", status: "error", data: "No data found!", request: msg});
-            });
+            chrome.storage.sync.get(['sessions'], (result) => {
+                console.log(result, "sessioni")
+                userSessions = result.sessions
+                resp({type: "result", status: "success", data: userSessions, request: msg});
+            })
             return true;
         }
+        //throw new Error('Invalid message: ' + msg)
     });
 
 } catch(err) {
@@ -71,11 +32,8 @@ function json2array(json){
     return result;
 }
 
-let sessions = [];
 let lastSession = {
     'site': undefined,
-    'week' : undefined,
-    'testVersion': undefined,
     'timestampStart': undefined,
     'timestampEnd': undefined,
     'userId': undefined, 
@@ -91,19 +49,9 @@ let lastSession = {
 };
 
 function initializeSession(userId, startStudy, site){
-    chrome.storage.sync.get(['start_study', 'version', 'YThome', 'YTscrolling', 'YTrecommendation', 'FBhome', 'FBscrolling'], function(result) {
-        let startStudy = result['start_study'];
-        if(startStudy === undefined){
-            startStudy = dayjs();
-            chrome.storage.sync.set({'start_study': startStudy.format("MM/DD/YYYY")});
-        } else {
-            startStudy = dayjs(startStudy);
-        }	
-        let studyWeek = getStudyWeek(startStudy);
+    chrome.storage.sync.get(['YThome', 'YTscrolling', 'YTrecommendation', 'FBhome', 'FBscrolling'], function(result) {
         lastSession = {
             'site': site,
-            'week' : studyWeek,
-            'testVersion': result['version'],
             'timestampStart': new Date().getTime(),
             'timestampEnd': undefined,
             'userId': userId, 
@@ -126,8 +74,6 @@ function initializeSession(userId, startStudy, site){
 function resetSession(userId){
     lastSession = {
         'site': undefined,
-        'week' : undefined,
-        'testVersion': undefined,
         'timestampStart': undefined,
         'timestampEnd': undefined,
         'userId': userId, 
@@ -166,24 +112,6 @@ function clickInSession(){
     lastSession['clicks'] += 1;
 }
 
-let setTestVersion = () => {
-    db.ref("settings/").once("value", (snapshot) => {
-        const data = snapshot.val();
-        let version = undefined;
-        if(data.tester1 <= data.tester2) {
-            version = 1;
-            db.ref("settings/").set({tester1: data.tester1 + 1, tester2: data.tester2});
-        } else {
-            version = 2;
-            db.ref("settings/").set({tester1: data.tester1, tester2: data.tester2 + 1});
-        }
-        chrome.storage.sync.set({version: version}, function() {
-            console.log("Test version saved: " + version);
-          });
-    });
-    
-}
-
 chrome.storage.sync.get('userid', function(items) {
     var userid = items.userid;
     if (userid) {
@@ -195,7 +123,6 @@ chrome.storage.sync.get('userid', function(items) {
             console.log("New userID: " + userid);
             trackTimeSpent(userid);
             uploadSessions(userid);
-            setTestVersion();
         });
     }
     
@@ -205,18 +132,15 @@ chrome.storage.sync.get('userid', function(items) {
               scrollInSession();
             } else if (request == "clickEvent"){
               clickInSession();
-            } else if (request == "finalSurvey") {
-                chrome.tabs.create({
-                    url: "https://docs.google.com/forms/d/e/1FAIpQLSf3bDeuIBlcqq1a84rYq5e7YyqV_yWksGegNYG365sLGioavQ/viewform?usp=sf_link",
-                    active: true
-                });
+            } else {
+                //throw new Error('Invalid message: ' + request)
             }
         }
     );
 });
 
 function trackTimeSpent(userId){
-    console.log("Tracking attivato!");
+    console.log("Tracking activated!");
     setInterval(()=>{
         chrome.windows.getLastFocused({ populate: true }, function (currentWindow) {
             if (currentWindow && currentWindow.focused) {
@@ -224,7 +148,7 @@ function trackTimeSpent(userId){
                 if (activeTab !== undefined && extractHostname(activeTab.url).includes("youtube")) {
                     if(lastSession.ongoing && lastSession['site'] === "facebook") {     //Required when passing from YT to FB
                         lastSession.timestampEnd = new Date().getTime();
-                        sessions.push(lastSession);
+                        sessionsToUpload.push(lastSession);
                         resetSession(userId);
                     }
                     if(!lastSession.ongoing){
@@ -235,7 +159,7 @@ function trackTimeSpent(userId){
                 } else if(activeTab !== undefined && extractHostname(activeTab.url).includes("facebook")) {
                     if(lastSession.ongoing && lastSession['site'] === "youtube") {      //Required when passing from FB to YT
                         lastSession.timestampEnd = new Date().getTime();
-                        sessions.push(lastSession);
+                        sessionsToUpload.push(lastSession);
                         resetSession(userId);
                     }
                     if(!lastSession.ongoing){
@@ -246,7 +170,7 @@ function trackTimeSpent(userId){
                     //stop the last session, if needed
                     if(lastSession.ongoing){
                         lastSession.timestampEnd = new Date().getTime();
-                        sessions.push(lastSession);
+                        sessionsToUpload.push(lastSession);
                         resetSession(userId);
                     }
                 }
@@ -254,7 +178,7 @@ function trackTimeSpent(userId){
                 if(lastSession.ongoing){
                     //stop the last session, if needed
                     lastSession.timestampEnd = new Date().getTime();
-                    sessions.push(lastSession);  
+                    sessionsToUpload.push(lastSession);  
                     resetSession(userId);
                 }
             }
@@ -277,39 +201,22 @@ function extractHostname(url){
     return hostname;
 }
 
-function uploadSessions(userId) {
+function uploadSessions() {
     setInterval(()=>{
-        let i=0;
-        if(sessions.length > 0) {
-            for(let session of sessions) {
-                // Get a key for a new session.
-                var newPostKey = db.ref("users/" + userId + "/").child('sessions').push().key;
-
-                var updates = {};
-                updates['/users/' + userId + '/' + 'sessions/' + newPostKey] = session;
-                db.ref().update(updates);
-                sessions.shift();
-            }
+        console.log(sessionsToUpload, "Nuove sessioni registrate, ancora da caricare")
+        console.log(userSessions, "Sessioni già salvate")
+        if(sessionsToUpload.length > 0) {
+            chrome.storage.sync.get(['sessions'], (result) => {
+                userSessions = result.sessions
+                const newUserSessions = userSessions.concat(sessionsToUpload)
+                chrome.storage.sync.set({sessions: newUserSessions}, function() {
+                    console.log(userSessions, 'Nuove sessioni salvate')
+                    sessionsToUpload = []
+                    });  
+            })            
         }
 
     }, SETTINGS_INTERVAL_UPLOAD_DEFAULT);
-}
-
-let getStudyWeek = (start) => {
-    let now = dayjs();
-    if(now.diff(start, 'day') <= 7) {
-        //First week, normal use without restrictions
-        return 0;
-    } else if(now.diff(start, 'day') > 7 && now.diff(start, 'day') <= 14) {
-        //Second week, home redesign and recommendation activated
-        return 1;
-    } else if(now.diff(start, 'day') > 14 && now.diff(start, 'day') <= 21) {
-        //Second week, infinite scrolling activated
-        return 2;
-    } else {
-        //Third week, home redesign, recommendation and infinite scrolling activated
-        return 3;
-    }
 }
 
 //Needed to resolve the automatic pause of the background script

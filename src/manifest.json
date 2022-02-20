@@ -1,0 +1,44 @@
+{
+  "name": "inControl",
+  "description": "Digital wellbeing extension",
+  "version": "1.0",
+  "manifest_version": 3,
+  "background": {
+      "service_worker": "background.js"
+    },
+    "permissions": ["storage", "activeTab", "scripting", "tabs", "idle", "webNavigation", "alarms"],
+    "host_permissions": ["<all_urls>"],
+  "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+          "16": "/images/brain16.png",
+          "32": "/images/brain32.png",
+          "64": "/images/brain64.png",
+          "128": "/images/brain128.png"
+        }
+    },
+  "content_scripts": [
+    {
+      "matches": ["http://*.facebook.com/*", "https://*.facebook.com/*"],
+      "js": ["jquery-3.6.0.js", "facebook.js", "infiniteScrolling.js", "dayjs.min.js"],
+      "run_at": "document_end",
+      "css": ["facebook.css"]
+    },
+    {
+      "matches": ["https://*.youtube.com/*", "http://*.youtube.com/*"],
+      "js": ["jquery-3.6.0.js", "youtube.js", "infiniteScrolling.js", "dayjs.min.js"],
+      "css": ["youtube.css"]
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["apexcharts.js", "moment.min.js"]
+    }
+  ],
+  "icons": {
+  "16": "/images/brain16.png",
+  "32": "/images/brain32.png",
+  "64": "/images/brain64.png",
+  "128": "/images/brain128.png"
+  },
+  "options_page": "options.html"
+}

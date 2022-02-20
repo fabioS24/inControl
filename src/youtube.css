@@ -1,0 +1,45 @@
+.homeSquare {
+    width: 100px;
+    font-size: 14px;
+    background-color: white;
+    box-shadow: 0px 0px 5px #888888;
+    padding: 20px;
+    margin: 20px;
+    text-align: center;
+}
+
+.flex-container {
+    display: flex;
+}
+
+#mySearchBar {
+    margin-top: 200px;
+    width: 550px;
+}
+
+#voice-search-button {
+    margin-bottom: 10px;
+    margin-top: -5px;
+    margin-right: 20px;
+}
+
+.homeSquare:hover {
+    background-color: rgb(221, 221, 221);
+    /*box-shadow: -3px 3px 3px #888888;*/
+}
+
+.YTbuttonsText {
+    opacity: 0.7;
+}
+
+@media (min-width: 1000px) {
+    #primary.ytd-watch-flexy{
+        max-width: calc(100% - 474px) !important;
+    }
+}
+
+@media (min-width: 1300px) {
+    #primary.ytd-watch-flexy{
+        max-width: calc(100% - 500 px) !important;
+    }
+}

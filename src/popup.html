@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
+        <script src='jquery-3.4.1.min.js'></script>
+        <meta charset="utf-8"/>
+        <title>inControl</title>
+        <style>
+        body{
+            margin: 0;
+            min-width: 300px;
+            font-family: 'Roboto Mono';
+        }
+
+        .top-container, .options-container{
+            padding: 10px;
+        }
+
+        .options-container{
+            background-color: #f1faee;
+            color: #1d3557;
+        }
+
+        h3{
+            letter-spacing: 2px;
+        }
+
+        .divider{
+            margin-top: 32px;
+            width: 32px;
+            height: 2px;
+            background-color: #000;
+        }
+
+        .options label{
+            display: flex;
+            padding: 8px;
+            padding-left: 0;
+            user-select: none;
+        }
+
+        .options input{
+            margin-right: 8px;
+        }
+
+        .options label:hover{
+            background-color: #1d35573a;
+            cursor: pointer;
+        }
+
+        a{
+            color: #1d3557;
+            text-decoration: none;
+            border-bottom: 1px solid #1d3557;
+        }
+
+        a:hover{
+            opacity: 0.6;
+        }
+
+        input[type=button]{
+            background: none;
+            border: 1px solid #1d3557;
+            font-family: 'Roboto Mono';
+            color: #1d3557;
+            cursor: pointer;
+            padding: 6px;
+            margin-top: 16px;
+            position: relative;
+            left: 100%;
+            transform: translateX(-100%);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #statsButton {
+            background: none;
+            width: 100%;
+            text-align: center;
+            border: 1px solid #1d3557;
+            font-family: 'Roboto Mono';
+            color: #1d3557;
+            cursor: pointer;
+            padding: 6px;
+            margin: auto;
+            text-transform: uppercase;
+        }
+
+        #surveyButton {
+            background: none;
+            text-align: center;
+            width: 100%;
+            border: 1px solid #1d3557;
+            font-family: 'Roboto Mono';
+            color: #1d3557;
+            cursor: pointer;
+            padding: 6px;
+            margin: auto;
+            margin-top: -10px;
+            text-transform: uppercase;
+        }
+
+        input[type=button]:hover{
+            background-color: #1d3557;
+            color: #f1faee;
+        }
+
+        #statsButton:hover {
+            background-color: #1d3557;
+            color: #f1faee;
+        }
+
+        #surveyButton:hover {
+            background-color: #1d3557;
+            color: #f1faee;
+        }
+
+        .status{
+            color: #1d3557;
+            text-align: center;
+            padding: 10px;
+            height: 20px;
+        }
+
+        footer {
+            background-color: #f1faee;
+            color: #1d3557;
+            padding: 8px;
+        }
+
+        </style>
+    </head>
+    <body>
+        <div class='top-container'>
+            <img src="/images/brain64.png" alt="inControl icon" style="float: left; margin-right: 10px; width: 48px; margin-top: 10px; margin-left: 10px;">
+            <h1>inControl</h1>
+        </div>
+        <div id="chart">
+        </div>
+        <div style="padding: 10px;">
+            <h4 id='test-feedback'></h4>
+            <button id="surveyButton">Open survey</button>
+        </div>
+        <div class='options-container'>
+            <button id="statsButton">See your usage statistics</button>
+        </div>
+        <div class='options-container' id='myContainer' style="padding-top: 10px; display: none;">
+            <h3>Options</h3>
+            <form class='options'>
+              <fieldset>
+                <legend>YouTube</legend>
+                <label for='YThome'><input type='checkbox' id='YThome' name='YThome'></input>Custom home page</label>
+                <label for='YTscrolling'><input type='checkbox' id='YTscrolling' name='YTscrolling'></input>Manage infinite scrolling</label>
+                <label for='YTrecommendation'><input type='checkbox' id='YTrecommendation' name='YTrecommendation'></input>Remove recommendation in video player</label>
+              </fieldset>
+              <fieldset>
+                <legend>Facebook</legend>
+                <label for='FBhome'><input type='checkbox' id='FBhome' name='FBhome'></input>Custom home page</label>
+                <label for='FBscrolling'><input type='checkbox' id='FBscrolling' name='FBscrolling'></input>Manage infinite scrolling</label>
+              </fieldset>
+                <input type='button' id='options-save' value='Save'></input>
+            </form>
+            <div class='status'><span id='status'></span></div>
+        </div>
+        <script src='popup.js'></script>
+        <script src='dayjs.min.js'></script>
+    </body>
+    <footer>
+        <div style="font-size: 10px; margin-top: 5px">Icons made by <em>Freepik</em> from <em>www.flaticon.com</em></div>
+      </footer>
+</html>

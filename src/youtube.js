@@ -1,64 +1,23 @@
 let searchBar = undefined;
 let audioSearch = undefined;
 
-chrome.storage.sync.get(['start_study', 'version'], function(result) {
-    let startStudy = result['start_study'];
-    let testVersion = result['version'];
-	if(startStudy === undefined){
-		startStudy = dayjs();
-		chrome.storage.sync.set({'start_study': startStudy.format("MM/DD/YYYY")});
-	} else {
-		startStudy = dayjs(startStudy);
-	}	
-    let studyWeek = getStudyWeek(startStudy);
-    //testVersion = 2;
-    //studyWeek = 2;
-    console.log("StudyWeek: " + studyWeek);
-    if((studyWeek == 1 && testVersion == 1) || (studyWeek == 2 && testVersion == 2)) {
-        bindListener(undefined, studyWeek);
+chrome.storage.sync.get({
+    YThome: false,
+    YTscrolling: false,
+    YTrecommendation: false,
+}, function (items) {
+    bindListener(items);
+    if(items.YTrecommendation) {
+        clearVideoPlayer();
+    }
+    if(items.YThome) {
         if(window.location.href === "https://www.youtube.com/") {
             buildCustomHome();
         }
-        clearVideoPlayer();
-    } else if(studyWeek == 3) {
-        chrome.storage.sync.get(['removalsurvey'], function(result) {
-			let promptRemovalSurvey = result['removalsurvey'];
-			if(promptRemovalSurvey === undefined){
-				promptRemovalSurvey = {'visualize':true, 'attempts':0}
-			}
-			if(promptRemovalSurvey.visualize && promptRemovalSurvey.attempts < 5){
-
-				if (window.confirm("Ciao, il test è concluso, grazie di aver partecipato! Ti chiedo gentilmente di compilare il seguente sondaggio di uscita. Clicca OK per accedere al sondaggio.")) 
-				{
-					chrome.runtime.sendMessage("finalSurvey");
-                    chrome.storage.sync.set({'removalsurvey': {visualize: true, attempts: promptRemovalSurvey.attempts + 1}});
-				} else {
-					chrome.storage.sync.set({'removalsurvey': {visualize: true, attempts: promptRemovalSurvey.attempts + 2}});
-				};
-			} 
-		});
-
-        /*
-        chrome.storage.sync.get({
-            YThome: false,
-            YTscrolling: false,
-            YTrecommendation: false,
-        }, function (items) {
-            bindListener(items, studyWeek);
-            if(items.YTrecommendation) {
-                clearVideoPlayer();
-            }
-            if(items.YThome) {
-                if(window.location.href === "https://www.youtube.com/") {
-                    buildCustomHome();
-                }
-                buildCustomHome();
-            }
-        });
-        */
+        buildCustomHome();
     }
 });
-
+        
 let buildCustomHome = () => {
     let leftItemBar = document.getElementById("items"); //Item bar
     //searchBar = document.getElementById("search"); //Search bar
@@ -114,25 +73,17 @@ let clearVideoPlayer = () => {
     }   
 }
 
-let bindListener = (items, studyWeek) => {
+let bindListener = (items) => {
     document.body.addEventListener("yt-navigate-finish", function(event) {
-        if(studyWeek < 3) {
+        if(items.YTrecommendation) {
             clearVideoPlayer();
+        }
+        if(items.YThome) {
             if(window.location.href === "https://www.youtube.com/") {
                 buildCustomHome();
-            }
-            bindListener(items);
-        } else {
-            if(items.YTrecommendation) {
-                clearVideoPlayer();
-            }
-            if(items.YThome) {
-                if(window.location.href === "https://www.youtube.com/") {
-                    buildCustomHome();
-                } else {
-                    document.getElementById("center").append(searchBar);
-                    document.getElementById("center").append(audioSearch);
-                }
+            } else {
+                document.getElementById("center").append(searchBar);
+                document.getElementById("center").append(audioSearch);
             }
         }
     });
@@ -145,20 +96,3 @@ document.addEventListener('scroll', ()=>{
 document.addEventListener('click', ()=>{
 	chrome.runtime.sendMessage("clickEvent");
 });
-
-let getStudyWeek = (start) => {
-    let now = dayjs();
-    if(now.diff(start, 'day') <= 7) {
-        //First week, normal use without restrictions
-        return 0;
-    } else if(now.diff(start, 'day') > 7 && now.diff(start, 'day') <= 14) {
-        //Second week, home redesign and recommendation activated
-        return 1;
-    } else if(now.diff(start, 'day') > 14 && now.diff(start, 'day') <= 21) {
-        //Second week, infinite scrolling activated
-        return 2;
-    } else {
-        //Third week, home redesign, recommendation and infinite scrolling activated
-        return 3;
-    }
-}

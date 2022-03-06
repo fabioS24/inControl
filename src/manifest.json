@@ -20,18 +20,18 @@
   "content_scripts": [
     {
       "matches": ["http://*.facebook.com/*", "https://*.facebook.com/*"],
-      "js": ["jquery-3.6.0.js", "facebook.js", "infiniteScrolling.js", "dayjs.min.js"],
+      "js": ["./lib/jquery-3.6.0.js", "./facebook/facebook.js", "infiniteScrolling.js", "./lib/dayjs.min.js"],
       "run_at": "document_end",
-      "css": ["facebook.css"]
+      "css": ["./facebook/facebook.css"]
     },
     {
       "matches": ["https://*.youtube.com/*", "http://*.youtube.com/*"],
-      "js": ["jquery-3.6.0.js", "youtube.js", "infiniteScrolling.js", "dayjs.min.js"],
-      "css": ["youtube.css"]
+      "js": ["./lib/jquery-3.6.0.js", "./youtube/youtube.js", "infiniteScrolling.js", "./lib/dayjs.min.js"],
+      "css": ["./youtube/youtube.css"]
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["apexcharts.js", "moment.min.js"]
+      "js": ["./lib/apexcharts.js", "./lib/moment.min.js"]
     }
   ],
   "icons": {

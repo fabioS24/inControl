@@ -1,7 +1,19 @@
-.homeSquare {
+.homeSquare-light {
     width: 100px;
     font-size: 14px;
     background-color: white;
+    box-shadow: 0px 0px 5px #888888;
+    padding: 20px;
+    margin: 20px;
+    text-align: center;
+}
+
+.homeSquare-dark {
+    width: 100px;
+    font-size: 14px;
+    background-color: rgb(110, 110, 110);
+    color: 'white !important';
+    fill: 'white !important';
     box-shadow: 0px 0px 5px #888888;
     padding: 20px;
     margin: 20px;
@@ -23,13 +35,19 @@
     margin-right: 20px;
 }
 
-.homeSquare:hover {
+.homeSquare-light:hover {
+    background-color: rgb(221, 221, 221);
+    /*box-shadow: -3px 3px 3px #888888;*/
+}
+
+.homeSquare-dark:hover {
     background-color: rgb(221, 221, 221);
     /*box-shadow: -3px 3px 3px #888888;*/
 }
 
 .YTbuttonsText {
     opacity: 0.7;
+    color: 'white';
 }
 
 @media (min-width: 1000px) {

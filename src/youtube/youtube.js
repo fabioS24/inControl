@@ -91,9 +91,9 @@ let bindListener = (items) => {
 }
 
 document.addEventListener('scroll', ()=>{
-	chrome.runtime.sendMessage("scrollEvent");
+	chrome.runtime.sendMessage({command: "scrollEvent"});
 }, { passive: true });
 
 document.addEventListener('click', ()=>{
-	chrome.runtime.sendMessage("clickEvent");
+	chrome.runtime.sendMessage({command: "clickEvent"});
 });

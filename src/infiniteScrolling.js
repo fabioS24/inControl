@@ -9,12 +9,8 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', eve
 });
 
 chrome.storage.sync.get({
-    YThome: false,
     YTscrolling: false,
-    YTrecommendation: false,
-    FBhome: false,
     FBscrolling: false,
-    FBrecommendation: false,
 }, function (items) {
     const theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
     if(items.YTscrolling) {

@@ -1,22 +1,83 @@
 const SETTINGS_INTERVAL_CHECK_DEFAULT = 1000;
 const SETTINGS_INTERVAL_UPLOAD_DEFAULT = 10000;
+const savedSessions = new Map();
 let sessionsToUpload = [];
-let userSessions = [];
+const supportedWebsites = ['youtube', 'facebook']
 
 chrome.action.setBadgeText({text: 'OFF'});
 chrome.action.setBadgeBackgroundColor({color: '#737373'});
 
+//Needed to resolve the automatic pause of the background script
+let lifeline;
+
+chrome.alarms.create({ periodInMinutes: 4.9 })
+chrome.alarms.onAlarm.addListener(() => {
+  console.log('log for debug')
+});
+
+async function keepAlive() {
+    if (lifeline) return;
+    for (const tab of await chrome.tabs.query({ url: '*://*/*' })) {
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          function: () => chrome.runtime.connect({ name: 'keepAlive' }),
+        });
+        chrome.tabs.onUpdated.removeListener(retryOnTabUpdate);
+        return;
+      } catch (e) {}
+    }
+    chrome.tabs.onUpdated.addListener(retryOnTabUpdate);
+  }
+  
+  async function retryOnTabUpdate(tabId, info, tab) {
+    if (info.url && /^(file|https?):/.test(info.url)) {
+      keepAlive();
+    }
+  }
+  
+keepAlive();
+
+chrome.runtime.onConnect.addListener(port => {
+  if (port.name === 'keepAlive') {
+    lifeline = port;
+    setTimeout(keepAliveForced, 295e3); // 5 minutes minus 5 seconds
+    port.onDisconnect.addListener(keepAliveForced);
+  }
+});
+
+function keepAliveForced() {
+  lifeline?.disconnect();
+  lifeline = null;
+  keepAlive();
+}
+
 try {
-    chrome.runtime.onMessage.addListener((msg, sender, resp) => {
-        if(msg.command === "fetch") {
-            chrome.storage.sync.get(['sessions'], (result) => {
-                console.log(result, "sessioni")
-                userSessions = result.sessions
-                resp({type: "result", status: "success", data: userSessions, request: msg});
-            })
-            return true;
+    self.importScripts('./lib/dayjs.min.js', './lib/moment.min.js')
+
+    chrome.runtime.onMessage.addListener((msg, _, resp) => {
+        switch(msg.command) {
+            case 'fetch': 
+                chrome.storage.sync.get(null, (result) => {
+                    const userSessions = result
+                    delete userSessions.FBhome
+                    delete userSessions.FBscrolling
+                    delete userSessions.YThome
+                    delete userSessions.YTrecommendation
+                    delete userSessions.YTscrolling
+                    delete userSessions.userid
+                    resp({type: "result", status: "success", data: Object.values(userSessions), request: msg});
+                })
+                return true;
+            case 'scrollEvent':
+                lastSession['scrolls'] += 1
+                break
+            case 'clickEvent':
+                lastSession['clicks'] += 1
+                break
+            default: 
+                throw new Error('Invalid message: ' + msg.command)
         }
-        //throw new Error('Invalid message: ' + msg)
     });
 
 } catch(err) {
@@ -34,58 +95,47 @@ function json2array(json){
 
 let lastSession = {
     'site': undefined,
+    'date': undefined,
+    'calendarWeek': undefined,
     'timestampStart': undefined,
     'timestampEnd': undefined,
     'userId': undefined, 
     'clicks': 0,
     'duration': 0,
     'scrolls': 0,
-    'ongoing': false,
-    'YThome': undefined,
-    'YTscrolling': undefined,
-    'YTrecommendation': undefined,
-    'FBhome': undefined,
-    'FBscrolling': undefined,
+    'ongoing': false
 };
 
-function initializeSession(userId, startStudy, site){
-    chrome.storage.sync.get(['YThome', 'YTscrolling', 'YTrecommendation', 'FBhome', 'FBscrolling'], function(result) {
-        lastSession = {
-            'site': site,
-            'timestampStart': new Date().getTime(),
-            'timestampEnd': undefined,
-            'userId': userId, 
-            'clicks': 0,
-            'duration': 0,
-            'scrolls': 0,
-            'ongoing': true,
-            'YThome': result['YThome'],
-            'YTscrolling': result['YTscrolling'],
-            'YTrecommendation': result['YTrecommendation'],
-            'FBhome': result['FBhome'],
-            'FBscrolling': result['FBscrolling'],
-        };
-
-        chrome.action.setBadgeText({text: 'ON'});
-        chrome.action.setBadgeBackgroundColor({color: '#4688F1'});
-    });
+function initializeSession(userId, site){
+    const timestampStart = new Date().getTime()
+    lastSession = {
+        'site': site,
+        'date': dayjs(timestampStart).format("YYYY/MM/DD"),
+        'calendarWeek': moment(timestampStart).format("YYYY") + "-" + moment(timestampStart).format("W"),
+        'timestampStart': timestampStart,
+        'timestampEnd': undefined,
+        'userId': userId, 
+        'clicks': 0,
+        'duration': 0,
+        'scrolls': 0,
+        'ongoing': true,
+    }    
+    chrome.action.setBadgeText({text: 'ON'});
+    chrome.action.setBadgeBackgroundColor({color: '#4688F1'});
 }
 
 function resetSession(userId){
     lastSession = {
         'site': undefined,
+        'date': undefined,
+        'calendarWeek': undefined,
         'timestampStart': undefined,
         'timestampEnd': undefined,
         'userId': userId, 
         'clicks': 0,
         'duration': 0,
         'scrolls': 0,
-        'ongoing': false,
-        'YThome': undefined,
-        'YTscrolling': undefined,
-        'YTrecommendation': undefined,
-        'FBhome': undefined,
-        'FBscrolling': undefined,
+        'ongoing': false
     };
     chrome.action.setBadgeText({text: 'OFF'});
     chrome.action.setBadgeBackgroundColor({color: '#737373'});
@@ -104,39 +154,19 @@ function getRandomToken() {
     return hex;
 }
 
-function scrollInSession(){
-    lastSession['scrolls'] += 1;
-}
-
-function clickInSession(){
-    lastSession['clicks'] += 1;
-}
-
 chrome.storage.sync.get('userid', function(items) {
     var userid = items.userid;
     if (userid) {
         trackTimeSpent(userid);
-        uploadSessions(userid);
+        updateStats()
     } else {
         userid = getRandomToken();
-        chrome.storage.sync.set({userid: userid, YThome: false, YTrecommendation: false, YTscrolling: false, FBhome: false, FBscrolling: false}, function() {
+        chrome.storage.sync.set({userid: userid, YThome: true, YTrecommendation: true, YTscrolling: true, FBhome: true, FBscrolling: true}, function() {
             console.log("New userID: " + userid);
             trackTimeSpent(userid);
-            uploadSessions(userid);
+            updateStats()
         });
     }
-    
-    chrome.runtime.onMessage.addListener(
-        function(request, sender, sendResponse) {
-            if (request == "scrollEvent"){
-              scrollInSession();
-            } else if (request == "clickEvent"){
-              clickInSession();
-            } else {
-                //throw new Error('Invalid message: ' + request)
-            }
-        }
-    );
 });
 
 function trackTimeSpent(userId){
@@ -144,26 +174,17 @@ function trackTimeSpent(userId){
     setInterval(()=>{
         chrome.windows.getLastFocused({ populate: true }, function (currentWindow) {
             if (currentWindow && currentWindow.focused) {
-                var activeTab = currentWindow.tabs.find(t => t.active === true);
-                if (activeTab !== undefined && extractHostname(activeTab.url).includes("youtube")) {
-                    if(lastSession.ongoing && lastSession['site'] === "facebook") {     //Required when passing from YT to FB
+                const activeTab = currentWindow.tabs.find(t => t.active === true);
+                const currentUrl = extractHostname(activeTab.url)
+                const currentSite = supportedWebsites.filter((site) => currentUrl.includes(site))[0] ?? 'unsupported site'
+                if(activeTab !== undefined && supportedWebsites.filter((site) => currentSite.includes(site)).length > 0) {
+                    if(lastSession.ongoing && lastSession['site'] !== currentSite && supportedWebsites.filter((site) => currentSite.includes(site)).length > 0) {     //Required when passing from a supported site to another
                         lastSession.timestampEnd = new Date().getTime();
                         sessionsToUpload.push(lastSession);
                         resetSession(userId);
                     }
                     if(!lastSession.ongoing){
-                        initializeSession(userId, undefined, "youtube");
-                    }
-                    lastSession['duration'] = lastSession['duration'] + 1;
-
-                } else if(activeTab !== undefined && extractHostname(activeTab.url).includes("facebook")) {
-                    if(lastSession.ongoing && lastSession['site'] === "youtube") {      //Required when passing from FB to YT
-                        lastSession.timestampEnd = new Date().getTime();
-                        sessionsToUpload.push(lastSession);
-                        resetSession(userId);
-                    }
-                    if(!lastSession.ongoing){
-                        initializeSession(userId, undefined, "facebook");
+                        initializeSession(userId, currentSite);
                     }
                     lastSession['duration'] = lastSession['duration'] + 1;
                 } else {
@@ -201,59 +222,44 @@ function extractHostname(url){
     return hostname;
 }
 
-function uploadSessions() {
+function updateStats() {
     setInterval(()=>{
-        console.log(sessionsToUpload, "Nuove sessioni registrate, ancora da caricare")
-        console.log(userSessions, "Sessioni già salvate")
         if(sessionsToUpload.length > 0) {
-            chrome.storage.sync.get(['sessions'], (result) => {
-                userSessions = result.sessions
-                const newUserSessions = userSessions.concat(sessionsToUpload)
-                chrome.storage.sync.set({sessions: newUserSessions}, function() {
-                    console.log(userSessions, 'Nuove sessioni salvate')
-                    sessionsToUpload = []
-                    });  
-            })            
+            sessionsToUpload.forEach(async (session) => {
+                const key= session.date + "-" + session.site
+                if(!savedSessions.get(key)) {
+                    const result = await chrome.storage.sync.get([key])
+                    if(!result[key]) {
+                        const newDaySession = {
+                            date: session.date,
+                            calendarWeek: session.calendarWeek,
+                            site: session.site,
+                            clicks: session.clicks,
+                            duration: session.duration,
+                            scrolls: session.scrolls
+                        }
+                        await chrome.storage.sync.set({[key]: newDaySession})
+                        savedSessions.set(key, newDaySession)
+                    } else {
+                        const currentDigest = result[key]
+                        currentDigest.scrolls += session.scrolls
+                        currentDigest.duration += session.duration
+                        currentDigest.clicks += session.clicks
+                        await chrome.storage.sync.set({[key]: currentDigest})
+                        savedSessions.set(key, currentDigest)
+                    }
+      
+                } else {    
+                    const currentDigest = savedSessions.get(key)
+                    currentDigest.scrolls += session.scrolls
+                    currentDigest.duration += session.duration
+                    currentDigest.clicks += session.clicks
+                    await chrome.storage.sync.set({[key]: currentDigest})
+                    savedSessions.set(key, currentDigest)
+                }
+            })
+            sessionsToUpload = []
         }
 
     }, SETTINGS_INTERVAL_UPLOAD_DEFAULT);
-}
-
-//Needed to resolve the automatic pause of the background script
-let lifeline;
-keepAlive();
-
-chrome.runtime.onConnect.addListener(port => {
-  if (port.name === 'keepAlive') {
-    lifeline = port;
-    setTimeout(keepAliveForced, 295e3); // 5 minutes minus 5 seconds
-    port.onDisconnect.addListener(keepAliveForced);
-  }
-});
-
-function keepAliveForced() {
-  lifeline?.disconnect();
-  lifeline = null;
-  keepAlive();
-}
-
-async function keepAlive() {
-  if (lifeline) return;
-  for (const tab of await chrome.tabs.query({ url: '*://*/*' })) {
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        function: () => chrome.runtime.connect({ name: 'keepAlive' }),
-      });
-      chrome.tabs.onUpdated.removeListener(retryOnTabUpdate);
-      return;
-    } catch (e) {}
-  }
-  chrome.tabs.onUpdated.addListener(retryOnTabUpdate);
-}
-
-async function retryOnTabUpdate(tabId, info, tab) {
-  if (info.url && /^(file|https?):/.test(info.url)) {
-    keepAlive();
-  }
 }

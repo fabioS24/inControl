@@ -34,27 +34,18 @@ let updateCharts = () => {
   let youtubeSessions = [];
   facebookSessions = allSessions.filter((session) => session.site == "facebook");
   youtubeSessions = allSessions.filter((session) => session.site == "youtube");
-  facebookSessions.map((x) => {
-    x.day = dayjs(x.timestampStart).format("YYYY/MM/DD");
-    x.calendarWeek = moment(x.timestampStart).format("YYYY") + "-" + moment(x.timestampStart).format("W");
-  });
-  youtubeSessions.map((x) => {
-    x.day = dayjs(x.timestampStart).format("YYYY/MM/DD");
-    x.calendarWeek = moment(x.timestampStart).format("YYYY") + "-" + moment(x.timestampStart).format("W");
-  });
 
-  let FBDay = groupBy(facebookSessions, "day");
-  let YTDay = groupBy(youtubeSessions, "day");
+  let FBDay = groupBy(facebookSessions, "date");
+  let YTDay = groupBy(youtubeSessions, "date");
   let FBWeek = groupBy(facebookSessions, "calendarWeek");
   let YTWeek = groupBy(youtubeSessions, "calendarWeek");
   
-  produceChart(FBDay, YTDay, "clicks", "day");
-  produceChart(FBDay, YTDay, "scrolls", "day");
-  produceChart(FBDay, YTDay, "duration", "day");
+  produceChart(FBDay, YTDay, "clicks", "date");
+  produceChart(FBDay, YTDay, "scrolls", "date");
+  produceChart(FBDay, YTDay, "duration", "date");
   produceChart(FBWeek, YTWeek, "clicks", "calendarWeek");
   produceChart(FBWeek, YTWeek, "scrolls", "calendarWeek");
   produceChart(FBWeek, YTWeek, "duration", "calendarWeek");
-  
 }
 
 let produceChart = (arrayFB, arrayYT, prop, time) => {

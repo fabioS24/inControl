@@ -10,7 +10,7 @@ chrome.action.setBadgeBackgroundColor({color: '#737373'});
 //Needed to resolve the automatic pause of the background script
 let lifeline;
 
-chrome.alarms.create({ periodInMinutes: 4.9 })
+chrome.alarms.create({ periodInMinutes: 1 })
 chrome.alarms.onAlarm.addListener(() => {
   console.log('log for debug')
 });
@@ -185,8 +185,16 @@ function trackTimeSpent(userId){
                     }
                     if(!lastSession.ongoing){
                         initializeSession(userId, currentSite);
+                    } else if(lastSession['duration'] < 30) {       // A session ended after 30 seconds, so even if the user closes the browser, only the last 30-second session is lost
+                        lastSession['duration'] = lastSession['duration'] + 1;
+                    } else {
+                        //stop the last session, if needed
+                        if(lastSession.ongoing){
+                            lastSession.timestampEnd = new Date().getTime();
+                            sessionsToUpload.push(lastSession);
+                            resetSession(userId);
+                        }    
                     }
-                    lastSession['duration'] = lastSession['duration'] + 1;
                 } else {
                     //stop the last session, if needed
                     if(lastSession.ongoing){

@@ -6,5 +6,4 @@ Supported websites:
  - Facebook
   
 Coming soon:
- - Support to dark mode
  - Support to Instagram and Twitter

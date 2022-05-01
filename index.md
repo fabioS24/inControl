@@ -1,4 +1,4 @@
-# inControl
+# ![logo](/assets/inControlLogo.png "inControl") inControl
 Browser extension to improve user's digital welleing. It focuses on reducing the effects of infinite scrolling, recommendation systems and home pages with multiple functions. The purpose of this application is to return the user to a greater awareness of his online actions, where instead the websites are intended to keep the user connected for as long as possible. 
   
 Supported websites:

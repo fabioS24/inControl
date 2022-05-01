@@ -1,37 +1,37 @@
-## inControl
+# ![logo](/assets/inControlLogo.png "inControl") inControl
+Browser extension to improve user's digital welleing. It focuses on reducing the effects of infinite scrolling, recommendation systems and home pages with multiple functions. The purpose of this application is to return the user to a greater awareness of his online actions, where instead the websites are intended to keep the user connected for as long as possible. 
+  
+Supported websites:
+ - YouTube
+ - Facebook
+ - Many soon...
 
-You can use the [editor on GitHub](https://github.com/fabioS24/inControl/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+## Features
+### Infinite scrolling
+The idea is to make the user aware of how much the page is actually scrolling, so as to break any loops that may form in the user's mind. This is achieved by making the page background darker as the user scrolls through the page.
+<p align="center">
+    <img src="/assets/infiniteScrolling.png" width="550">
+</p>
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
 
-### Markdown
+### Home redesign and recommendation systems
+The home pages of major websites are designed with the aim of providing the user with one reason (or many) to stay connected. Among the most used mechanisms are the recommendation systems. The solution involves modifying the design of the main pages to reduce the effects of these elements, trying to provide only one functionality per page.
+<p align="center">
+    <img src="/assets/homeRedesign.jpg" width="550">
+</p>
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## How to use
+Download the extension on the Chrome Web Store or download the entire repository from GitHub and import on Chrome as unpacked application.
+Once installed, by clicking on the icon of the extension (in the browser extensions toolbar) a popup shows all the features and solution that can be enabled on each website. The user is free to enable a subset of features on the desired sites. In this popup there is also a link to go to the stats page, where the user can consult his own usage statistics of the websites supported by the extension.
 
-```markdown
-Syntax highlighted code block
+<p align="center">
+    <img src="/assets/ExtensionPopup.jpg" width="250">
+</p>
 
-# Header 1
-## Header 2
-### Header 3
 
-- Bulleted
-- List
 
-1. Numbered
-2. List
+## Coming soon
+ - Support to Instagram, Twitter, Twitch and Reddit.
 
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/fabioS24/inControl/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+## Changelog
+1.0.0 - first release

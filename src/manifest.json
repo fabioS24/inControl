@@ -1,6 +1,6 @@
 {
   "name": "inControl",
-  "description": "Digital wellbeing extension",
+  "description": "Digital wellbeing extension to reduce the effects of infinite scrolling and recommendation systems.",
   "version": "1.0.0",
   "manifest_version": 3,
   "background": {

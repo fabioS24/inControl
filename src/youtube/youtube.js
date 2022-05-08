@@ -65,13 +65,10 @@ let buildCustomHome = () => {
 }
 
 let clearVideoPlayer = () => {
-    let columns = document.getElementById("columns");
-    if(columns) {
-        let secondary = columns.children[1];
-        if(secondary) {
-            secondary.remove();
-        }
-    }   
+    let related = document.getElementById("related");
+    if(related) {
+        related.remove();
+    } 
 }
 
 let bindListener = (items) => {

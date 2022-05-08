@@ -11,11 +11,11 @@ let save_options = () => {
       YTrecommendation: YTrecommendation,
       FBhome: FBhome,
       FBscrolling: FBscrolling,
-  }, function(){    //Callback da chiamare quando avviene il salvataggio delle impostazioni, in questo caso si visualizza un messaggio all'utente
+  }, function(){
       statusInd = document.getElementById("status");
-      statusInd.innerText = 'Options saved! Reload for them to take effect';
+      statusInd.style.display = 'block'
       setTimeout(function () {
-          statusInd.innerText = '';
+        statusInd.style.display = 'none'
       }, 2500);
   });
 }

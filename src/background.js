@@ -10,11 +10,6 @@ chrome.action.setBadgeBackgroundColor({color: '#737373'});
 //Needed to resolve the automatic pause of the background script
 let lifeline;
 
-chrome.alarms.create({ periodInMinutes: 1 })
-chrome.alarms.onAlarm.addListener(() => {
-  console.log('log for debug')
-});
-
 async function keepAlive() {
     if (lifeline) return;
     for (const tab of await chrome.tabs.query({ url: '*://*/*' })) {
@@ -162,7 +157,6 @@ chrome.storage.sync.get('userid', function(items) {
     } else {
         userid = getRandomToken();
         chrome.storage.sync.set({userid: userid, YThome: true, YTrecommendation: true, YTscrolling: true, FBhome: true, FBscrolling: true}, function() {
-            console.log("New userID: " + userid);
             trackTimeSpent(userid);
             updateStats()
         });
@@ -170,7 +164,6 @@ chrome.storage.sync.get('userid', function(items) {
 });
 
 function trackTimeSpent(userId){
-    console.log("Tracking activated!");
     setInterval(()=>{
         chrome.windows.getLastFocused({ populate: true }, function (currentWindow) {
             if (currentWindow && currentWindow.focused) {

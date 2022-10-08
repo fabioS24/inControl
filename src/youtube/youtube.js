@@ -28,7 +28,7 @@ let buildCustomHome = () => {
         leftItemBar.parentElement.remove();
     }
     if(home) {
-        const theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+        const theme = document.getElementsByTagName('html')[0].getAttribute('dark') !== '' ? 'light' : 'dark'
         home.innerHTML = "";
         let mySearchBar = document.createElement("div");
         mySearchBar.className = "flex-container";

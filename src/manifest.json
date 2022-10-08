@@ -1,7 +1,7 @@
 {
-  "name": "inControl",
-  "description": "Digital wellbeing extension to reduce the effects of infinite scrolling and recommendation systems.",
-  "version": "1.0.0",
+  "name": "inControl | Less distractions, more productivity",
+  "description": "Improve your productivity by reducing the effects of infinite scrolling and recommendation systems.",
+  "version": "1.0.1",
   "manifest_version": 3,
   "background": {
       "service_worker": "background.js"

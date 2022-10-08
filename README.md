@@ -34,5 +34,5 @@ Once installed, by clicking on the icon of the extension (in the browser extensi
  - Support to Instagram, Twitter, Twitch and Reddit.
 
 ## Changelog
-1.0.0 - first release
+1.0.0 - first release  
 1.0.1 - fix to dark mode and Facebook features
